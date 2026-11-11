@@ -33,7 +33,7 @@ declare module '@deepseek-ai/cordis' {
 export default class ProductAnalytics extends TypertRemoteService {
   static inject = ['deepseekAccount', 'productTelemetry']
   static Config = z.object({
-    enabled: z.boolean().default(true).volatile(), appVersion: z.string(),
+    enabled: z.boolean().default(false).volatile(), appVersion: z.string(),
     environmentQueryTimeoutMillis: z.number().step(1).min(1).max(2_147_483_647).default(5000),
     environmentQueryMaxOutputBytes: z.number().step(1).min(1).max(2_147_483_647).default(16384),
   })
@@ -64,7 +64,8 @@ export default class ProductAnalytics extends TypertRemoteService {
    * @returns whether this Host currently accepts Desktop analytics.
    */
   @Remote
-  enabled(): boolean { return this.active && this.config.enabled.get() }
+  // OFFLINE BUILD: analytics collection is permanently off.
+  enabled(): boolean { return false }
 
   /**
    * Stream the effective policy initially and after live configuration edits.
@@ -98,6 +99,8 @@ export default class ProductAnalytics extends TypertRemoteService {
    */
   @Remote
   async report(event: ProductEvent): Promise<void> {
+    // OFFLINE BUILD: never collect environment facts, device identity, or emit events.
+    void event
     if (!this.enabled()) return
     try {
       this.environment ??= collectEnvironment({

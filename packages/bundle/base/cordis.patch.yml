@@ -40,8 +40,10 @@
     - id: session
       name: '@deepseek-ai/dsh-session'
 
+    # OFFLINE BUILD: never piggy-back session logs / plugin inventory on model requests.
     - id: session-log-deepseek
       name: '@deepseek-ai/dsh-session-log-deepseek'
+      disabled: true
 
     - id: typert
       name: '@deepseek-ai/dsh-typert-registry'
@@ -82,8 +84,10 @@
     - id: agent
       name: '@deepseek-ai/dsh-agent'
 
+    # OFFLINE BUILD: never piggy-back session logs / plugin inventory on model requests.
     - id: plugin-package-inventory-deepseek
       name: '@deepseek-ai/dsh-plugin-package-inventory-deepseek'
+      disabled: true
 
     # The transport-independent default for Agents created by entry points.
     # Settings may supply a saved selection; consumers read it at creation time.
@@ -199,8 +203,11 @@
         writeEveryEvents: 200
         writeIntervalMs: 5000
 
+    # OFFLINE BUILD: OTel transport and session telemetry are disabled; the
+    # transport itself is a null exporter in this build.
     - id: otel
       name: '@deepseek-ai/dsh-otel'
+      disabled: true
 
     # OTel releases a Session-log prefix only after explicit user feedback,
     # regardless of model provider. Ordinary activity never triggers capture.
@@ -217,12 +224,13 @@
     # Every CLI exit path drains by disposing the root on SIGINT/SIGTERM.
     - id: session-telemetry-otel
       name: '@deepseek-ai/dsh-session-telemetry-otel'
+      disabled: true
       config:
-        mode: !!js process.env.DSH_TELEMETRY_MODE || 'FEEDBACK_ONLY'
+        mode: DISABLED
         shutdownTimeoutMillis: 3000
         maxRequestBytes: 4000000
         exporter:
-          url: !!js process.env.DSH_TELEMETRY_OTLP_URL ?? 'https://dsh-otel-collector.deepseeksvc.com/v1/logs'
+          url: 'http://127.0.0.1:9/offline-disabled'
           compression: gzip
           timeoutMillis: 1000
         processor:
@@ -525,5 +533,7 @@
     - id: llm-deepseek
       name: '@deepseek-ai/dsh-llm-deepseek-api-key'
 
+    # OFFLINE BUILD: the official-account model route is not mounted.
     - id: llm-deepseek-account
       name: '@deepseek-ai/dsh-llm-deepseek-account'
+      disabled: true

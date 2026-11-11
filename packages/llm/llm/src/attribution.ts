@@ -38,9 +38,10 @@ export interface AppIdentity {
  * can suppress attribution entirely.
  */
 export const APP_IDENTITY: AppIdentity = {
-  product: 'deepseek-harness',
+  // OFFLINE BUILD: neutral self-identification; no vendor product name or project URL.
+  product: 'dsh-offline',
   version,
-  url: 'https://github.com/deepseek-ai/deepseek-harness',
+  url: 'local',
 }
 
 /**

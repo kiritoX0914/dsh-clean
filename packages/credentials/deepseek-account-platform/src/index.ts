@@ -50,10 +50,10 @@ export interface Config {
 }
 /** Validated deployment choices. */
 export const Config = Schema.object({
-  platformOrigin: Schema.string().default('https://platform.deepseek.com'),
+  platformOrigin: Schema.string().default('https://account.offline.invalid'), // OFFLINE BUILD: no official account server
   desktopPlatform: Schema.union([Schema.const('darwin'), Schema.const('win32'), Schema.const(null)]).default(null),
   embeddedPageDist: Schema.string().default(''),
-  inferenceOrigin: Schema.string().default('https://api.deepseek.com'),
+  inferenceOrigin: Schema.string().default('https://inference.offline.invalid'), // OFFLINE BUILD: account tokens never attach to any real origin
   allowLoopbackHttp: Schema.boolean().default(false),
   rewriteBrowserOrigin: Schema.boolean().default(false),
   requestHeaders: Schema.dict(Schema.string().role('secret')).default({}),

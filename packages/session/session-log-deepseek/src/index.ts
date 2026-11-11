@@ -28,6 +28,9 @@ import type {
   DeepSeekSessionLogWireSurfaceOp,
 } from './types.ts'
 
+/** OFFLINE BUILD switch: no telemetry-like request contributions. */
+const OFFLINE_BUILD = true as boolean
+
 export type * from './types.ts'
 
 /** Cordis plugin name. */
@@ -49,7 +52,7 @@ export interface Config {
 
 /** Validated Session-log request contribution configuration. */
 export const Config = z.object({
-  enabled: z.boolean().default(true).volatile(),
+  enabled: z.boolean().default(false).volatile(), // OFFLINE BUILD
   maxBytes: z.number().step(1).min(1).default(8 * 1024 * 1024),
 })
 
@@ -182,6 +185,8 @@ export function acceptedThrough(session: Session): SessionSeqCursor {
  * @param config - validated configuration.
  */
 export function apply(ctx: Context, config: Config): void {
+  // OFFLINE BUILD: never upload the session log (dsh_session_log) alongside model requests.
+  if (OFFLINE_BUILD) return
   // Schemastery validates and fills the defaults before `apply` runs.
   const { maxBytes } = config
   ctx.deepseekLlmApiExtensions.register('dsh_session_log', {

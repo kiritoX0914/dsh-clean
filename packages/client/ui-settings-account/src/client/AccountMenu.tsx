@@ -12,6 +12,9 @@ import { AccountAvatar } from './AccountAvatar.tsx'
 import { AccountNoticeStack } from './AccountNotice.tsx'
 import css from './AccountMenu.module.css'
 
+/** OFFLINE BUILD switch. */
+const OFFLINE_BUILD = true as boolean
+
 /** Account launcher composed by the settings shell. */
 export type AccountMenuProps = PropsRuntime<'settings.launcher'> & PropsLocale<'settings.account'> & InjectFace<AccountSectionInjected>
 
@@ -74,9 +77,10 @@ export function AccountMenu({
       items={[
         { id: 'settings', label: t('settings'), icon: <IconSettingsOutlineMedium size={16} />,
           ...(settingsShortcut === undefined ? {} : { shortcut: settingsShortcut }) },
-        { id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> },
+        // OFFLINE BUILD: no official "contact us" questionnaire and no official sign-in entry.
+        ...(OFFLINE_BUILD ? [] : [{ id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> }]),
         ...(signedIn ? [{ id: 'signout', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }]
-          : [{ id: 'signin', label: t('signIn'), icon: <IconUserOutlineMedium size={16} /> }]),
+          : OFFLINE_BUILD ? [] : [{ id: 'signin', label: t('signIn'), icon: <IconUserOutlineMedium size={16} /> }]),
       ]}
       onClose={() => { setOpen(false) }}
       onSelect={(id) => {
@@ -85,7 +89,7 @@ export function AccountMenu({
         else if (id === 'signin') beginSignIn()
         else void requestSignOut()
       }} />
-    {account.loginVisible && !account.onboarding && <SignInDialog account={account} colorScheme={colorScheme}
+    {!OFFLINE_BUILD && account.loginVisible && !account.onboarding && <SignInDialog account={account} colorScheme={colorScheme}
       start={start} cancel={cancel} t={t}
       close={() => { showLogin(false) }} useApiKey={() => { showLogin(false); openOnboarding('deepseek-official') }} />}
     {signedIn && signOutImpact !== undefined && <SignOutDialog running={signOutImpact} signOut={signOut}

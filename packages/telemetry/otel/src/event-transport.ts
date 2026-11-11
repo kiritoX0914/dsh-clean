@@ -5,7 +5,7 @@ import got from 'got'
 import { createOtlpNetworkExportDelegate, OTLPExporterBase } from '@opentelemetry/otlp-exporter-base'
 import { JsonLogsSerializer } from '@opentelemetry/otlp-transformer'
 import type { LogRecordExporter } from '@opentelemetry/sdk-logs'
-import { createLogExporterMetrics, type LogExporterOptions, logTransportOptions } from './transport.ts'
+import { createLogExporterMetrics, createNullLogExporter, type LogExporterOptions, logTransportOptions } from './transport.ts'
 
 /**
  * Create a channel-owned exporter whose cancellation releases requests and retry timers.
@@ -14,6 +14,18 @@ import { createLogExporterMetrics, type LogExporterOptions, logTransportOptions 
  * @returns the SDK exporter; shutdown also destroys its owned HTTP agent.
  */
 export function createEventLogExporter(options: LogExporterOptions, signal: AbortSignal): LogRecordExporter {
+  // OFFLINE BUILD: ordinary product events are dropped locally; no HTTP request is ever made.
+  void options; void signal
+  return createNullLogExporter()
+}
+
+/**
+ * Original upstream cancellable exporter, retained for reference only and not called anywhere in this build.
+ * @param options - explicit collector and SDK HTTP settings.
+ * @param signal - channel cancellation.
+ * @returns the upstream exporter.
+ */
+export function createUpstreamEventLogExporterUnused(options: LogExporterOptions, signal: AbortSignal): LogRecordExporter {
   const config = logTransportOptions(options)
   let agent: ReturnType<typeof config.agentFactory> | undefined
   const exporter = new OTLPExporterBase(createOtlpNetworkExportDelegate(config, JsonLogsSerializer, createLogExporterMetrics(config.url), {

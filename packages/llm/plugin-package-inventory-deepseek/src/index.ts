@@ -21,6 +21,9 @@ import type {} from '@deepseek-ai/dsh-app-boot'
 import type { DeepSeekPluginPackageIdentity, DeepSeekPluginPackageInventoryExtension } from './types.ts'
 import type {} from './types.ts'
 
+/** OFFLINE BUILD switch: no telemetry-like request contributions. */
+const OFFLINE_BUILD = true as boolean
+
 export type * from './types.ts'
 
 /** Cordis plugin name. */
@@ -36,7 +39,7 @@ export interface Config {
 
 /** Validated plugin-package request contribution configuration. */
 export const Config: z<Config> = z.object({
-  enabled: z.boolean().default(true),
+  enabled: z.boolean().default(false), // OFFLINE BUILD
 })
 
 interface PackageManifest {
@@ -197,7 +200,8 @@ function collectActivePluginPackages(
  * @param config - validated default-on configuration.
  */
 export function apply(ctx: Context, config: Config): void {
-  if (config.enabled === false) return
+  // OFFLINE BUILD: never attach the installed-plugin inventory to model requests.
+  if (OFFLINE_BUILD || config.enabled === false) return
   const hostBaseUrl = ctx.baseUrl ?? import.meta.url
   const resolver = new PackageIdentityResolver(hostBaseUrl, ctx.get('pluginPackages'))
   // Unreadable identities are re-resolved on every request; log each module once.

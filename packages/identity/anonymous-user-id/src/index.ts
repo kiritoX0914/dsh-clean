@@ -69,6 +69,13 @@ export function getOrCreateAnonymousUserId(options: AnonymousUserIdOptions = {})
   const file = join(resolveDshHome(undefined, options.env ?? process.env), ANONYMOUS_USER_ID_FILE_NAME)
   const cached = memo.get(file)
   if (cached !== undefined) return cached
+  // OFFLINE BUILD: never persist a tracking identifier. Each process gets a
+  // fresh in-memory random id that is never written to disk or sent anywhere.
+  if (options.randomUUID === undefined) {
+    const ephemeral = randomUUID() as AnonymousUserId
+    memo.set(file, ephemeral)
+    return ephemeral
+  }
 
   let id = readPersistedId(file)
   if (id === undefined) {

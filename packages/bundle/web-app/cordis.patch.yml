@@ -42,9 +42,10 @@
 # `dsh.client` rows are the browser roster the modules node half scans into
 # window.__DSH_BOOT__; the modules row is simultaneously a host row.
 - insert:
+    # OFFLINE BUILD: product telemetry and analytics never mount.
     - id: desktop-product-telemetry
       name: '@deepseek-ai/dsh-host-product-telemetry-otel'
-      disabled: !!js "ctx.get('profileContext')?.name !== 'desktop'"
+      disabled: true
       config:
         scheduledDelayMillis: 30000
         timeoutMillis: 15000
@@ -52,13 +53,13 @@
         shutdownTimeoutMillis: 2000
         serviceName: deepseek-harness-desktop
         serviceVersion: !!js process.env.DSH_CLIENT_VERSION
-        endpoint: !!js process.env.DSH_PRODUCT_ANALYTICS_OTLP_URL
+        endpoint: 'http://127.0.0.1:9/offline-disabled'
 
     - id: product-analytics
       name: '@deepseek-ai/dsh-client-product-analytics'
-      disabled: !!js "ctx.get('profileContext')?.name !== 'desktop'"
+      disabled: true
       config:
-        enabled: true
+        enabled: false
         appVersion: !!js process.env.DSH_CLIENT_VERSION
 
     # Host-owned opt-in sampled when a new Web session receives its preset

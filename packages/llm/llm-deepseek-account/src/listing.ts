@@ -150,6 +150,15 @@ export function parseModelListing(body: unknown): ModelListing {
 export async function requestModelListing(
   url: string, headers: Readonly<Record<string, string>>, signal: AbortSignal,
 ): Promise<ModelListing> {
+  // OFFLINE BUILD: the official account model listing is severed; fail closed without network I/O.
+  void headers; void signal
+  throw new LlmError(`offline build: account model listing (${url}) is disabled`, 'TRANSPORT')
+}
+
+// Original upstream implementation, unreachable in this build.
+export async function upstreamRequestModelListingUnused(
+  url: string, headers: Readonly<Record<string, string>>, signal: AbortSignal,
+): Promise<ModelListing> {
   let response: Response
   let text: string
   try {

@@ -24,7 +24,7 @@ export interface Config {
 /** Compares public registry responses on the Host; the Client owns the initial selection. */
 export default class PluginRegistryProbe extends TypertRemoteService {
   static Config: z<Partial<Config>, Config> = z.object({
-    registryProbeEnabled: z.boolean().default(true),
+    registryProbeEnabled: z.boolean().default(false), // OFFLINE BUILD: no automatic npm/npmmirror ping
     registryProbeTimeoutMs: z.natural().min(1).max(MAX_TIMER_DELAY_MS).default(1500),
     registryProbeCacheTtlMs: z.natural().default(300000),
   })

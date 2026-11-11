@@ -7,6 +7,8 @@ import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
 import type { WelcomeApi } from '../welcome-api.ts'
 
 type Page = 'entry' | 'key' | 'account'
+/** OFFLINE BUILD switch. */
+const OFFLINE_BUILD = true as boolean
 
 /**
  * Render the standalone welcome flow using shell-owned operations and localized copy.
@@ -126,6 +128,8 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     }
   }
   async function start() {
+    // OFFLINE BUILD: sign-in is unavailable; go straight to the API-key page.
+    if (OFFLINE_BUILD) { navigate('key'); return }
     navigate('account')
     setStarting(true)
     setAttempt(null)
@@ -202,14 +206,15 @@ export function Welcome({ api }: { api: WelcomeApi }) {
         <button id="auth-loading" className="primary" type="button" hidden={failed} disabled aria-label={m.welcomeAuthExchanging}>
           <StateDot state="ongoing" size={16} className="welcome-loading" />
         </button>
-        <button id="auth-retry" className="primary" type="button" hidden={!failed} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeAuthRetry}</button>
+        <button id="auth-retry" className="primary" type="button" hidden onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeAuthRetry}</button>
         <button id="auth-api-key" className="secondary" type="button" hidden={!failed} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
         <button id="auth-cancel" className="secondary" type="button" hidden={failed}
           disabled={cancelling || phase === 'committing' || phase === 'succeeded' || (phase === 'initializing' && !attempt?.id)}
           onClick={() => { void cancel() }}>{m.welcomeAuthCancel}</button>
       </div>
       <div id="entry-actions" className="actions" hidden={page !== 'entry'}>
-        <button id="sign-in" className="primary" type="button" onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeSignIn}</button>
+        {/* OFFLINE BUILD: official account sign-in is removed. */}
+        <button id="sign-in" className="primary" type="button" hidden onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeSignIn}</button>
         <button ref={keyButton} id="api-key" className="secondary" type="button" onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
       </div>
       <div id="key-actions" className="actions" hidden={page !== 'key'}>

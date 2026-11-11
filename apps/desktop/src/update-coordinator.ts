@@ -11,6 +11,9 @@ import { DesktopUpdatePreparationError } from './update-error.ts'
 
 const { autoUpdater } = electronUpdater
 
+/** OFFLINE BUILD switch: the auto-updater is permanently disconnected. */
+const OFFLINE_BUILD = true as boolean
+
 /** Owns one updater target until its download and installation settle. */
 export class DesktopUpdateCoordinator {
   private current: DesktopUpdateState = { phase: 'idle' }
@@ -52,7 +55,8 @@ export class DesktopUpdateCoordinator {
     private readonly publish: (state: DesktopUpdateState) => DesktopUpdateState,
     private readonly beforeRestart: () => Promise<boolean>,
     private readonly updater: AppUpdater = autoUpdater,
-    private readonly enabled: () => boolean = () => app.isPackaged && existsSync(join(process.resourcesPath, 'app-update.yml')),
+    // OFFLINE BUILD: there is never an update source, even if an app-update.yml were present.
+    private readonly enabled: () => boolean = () => !OFFLINE_BUILD && app.isPackaged && existsSync(join(process.resourcesPath, 'app-update.yml')),
     private readonly currentVersion: () => string = () => app.getVersion(),
     private readonly downloadResult?: (success: boolean, reason?: string) => void,
     private readonly channel: 'nightly' | 'latest' = 'nightly',
@@ -103,6 +107,8 @@ export class DesktopUpdateCoordinator {
   async download(version: string): Promise<DesktopUpdateState> {
     this.assertLive()
     if (this.downloaded || this.installOperation !== undefined) return this.current
+    // OFFLINE BUILD: downloads are impossible; never call the updater transport.
+    if (!this.enabled()) return this.setState(this.failure(new Error('offline build: updates are disabled'), 'download'))
     this.downloadOperation ??= Promise.resolve().then(async () => {
       await this.checkOperation
       this.assertLive()
@@ -130,6 +136,7 @@ export class DesktopUpdateCoordinator {
    */
   async install(version: string): Promise<DesktopUpdateState> {
     this.assertLive()
+    if (!this.enabled()) throw new Error('offline build: updates are disabled')
     if (!this.downloaded || this.downloadOperation !== undefined || version !== this.candidate) throw new Error('desktop update: confirmed target is not ready')
     this.installOperation ??= Promise.resolve().then(async () => {
       this.setState({ phase: 'installing', version })
@@ -182,6 +189,8 @@ export class DesktopUpdateCoordinator {
   }
 
   private async doCheck(): Promise<DesktopUpdateState> {
+    // OFFLINE BUILD: update checks are a local no-op; no feed is ever contacted.
+    if (!this.enabled()) return this.setState({ phase: 'idle' })
     try {
       this.assertLive()
       if (!this.enabled()) throw new Error('desktop update: this application has no packaged update source')

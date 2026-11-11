@@ -53,7 +53,12 @@ function origin(value: unknown, local: boolean): string {
  * @param allowLoopback - Explicit unpackaged/test permission for an HTTP 127.0.0.1 policy origin only.
  * @returns Validated polling options, or undefined when unconfigured.
  */
+/** OFFLINE BUILD switch: remote policy is permanently off. */
+const OFFLINE_BUILD = true as boolean
+
 export function resolveDesktopPolicyConfig(input: unknown, allowLoopback = false): DesktopPolicyConfig | undefined {
+  // OFFLINE BUILD: the remote mandatory-update policy service is never queried.
+  if (OFFLINE_BUILD) return undefined
   if (input === undefined) return undefined
   const value = record(input)
   if (value === undefined || !Array.isArray(value.allowedPageOrigins) || value.allowedPageOrigins.length === 0) {

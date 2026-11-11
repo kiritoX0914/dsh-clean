@@ -24,6 +24,31 @@ export type LogExporterOptions = Omit<OTLPExporterNodeConfigBase, 'selfObsMeterP
  * @returns the exporter owned by one independent log pipeline.
  */
 export function createLogExporter(options: LogExporterOptions): LogRecordExporter {
+  // OFFLINE BUILD: telemetry egress is severed at the transport. Every exporter
+  // created by this package drops records locally and never opens a socket,
+  // whatever endpoint configuration or environment variables say.
+  void options
+  return createNullLogExporter()
+}
+
+/**
+ * OFFLINE BUILD: an exporter that accepts and discards every record without any network I/O.
+ * @returns a LogRecordExporter that never connects anywhere.
+ */
+export function createNullLogExporter(): LogRecordExporter {
+  return {
+    export: (_records, callback) => { callback({ code: 0 } as Parameters<typeof callback>[0]) },
+    forceFlush: async () => {},
+    shutdown: async () => {},
+  }
+}
+
+/**
+ * Original upstream OTLP HTTP exporter, retained for reference only and not called anywhere in this build.
+ * @param options - explicit endpoint, headers, agent, and SDK transport settings.
+ * @returns the upstream exporter.
+ */
+export function createUpstreamLogExporterUnused(options: LogExporterOptions): LogRecordExporter {
   return new OTLPExporterBase(createOtlpHttpExportDelegate(
     logTransportOptions(options), JsonLogsSerializer, OTLP_HTTP_LOG_EXPORTER_COMPONENT_TYPE, LogsExporterMetricsHelper, undefined))
 }

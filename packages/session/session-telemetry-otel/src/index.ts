@@ -34,9 +34,9 @@ export enum SessionTelemetryMode {
 }
 
 /** Default session-sharing policy for schema and direct construction. */
-export const DEFAULT_TELEMETRY_MODE = SessionTelemetryMode.FEEDBACK_ONLY
+export const DEFAULT_TELEMETRY_MODE = SessionTelemetryMode.DISABLED
 
-const DISABLED_FEEDBACK_WARNING = 'OpenTelemetry session upload is DISABLED; this feedback is not uploaded through OpenTelemetry'
+const DISABLED_FEEDBACK_WARNING = 'Offline build: feedback is kept local and never uploaded'
 const NON_CANONICAL_EVENT_WARNING = 'session telemetry ignored an event absent from the canonical session log'
 
 /** Only this Session's explicit feedback authorizes replay; fork seeds do not. */
@@ -150,7 +150,9 @@ export class OpenTelemetrySessionBackend extends SessionTelemetryBackend {
   override readonly sharing: SessionTelemetrySharingStatus
 
   constructor(ctx: Context, config: Config) {
-    const mode = resolveMode(config.mode)
+    // OFFLINE BUILD: session upload is permanently DISABLED regardless of config/env.
+    resolveMode(config.mode)
+    const mode: SessionTelemetryMode = SessionTelemetryMode.DISABLED
     super(ctx)
     this.sharing = sharingStatusFor(mode)
     if (mode === SessionTelemetryMode.DISABLED) {

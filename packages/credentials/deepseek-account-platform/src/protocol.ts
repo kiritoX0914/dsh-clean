@@ -170,6 +170,14 @@ function callerCancelled(signal: AbortSignal): boolean {
 }
 
 async function platformRequest(url: string, init: RequestInit, signal: AbortSignal): Promise<unknown> {
+  // OFFLINE BUILD: official account sign-in / profile / balance / logout endpoints are severed.
+  // Fail closed before any network I/O.
+  void init; void signal; void url
+  throw new PlatformAuthError('no-response')
+}
+
+// Original upstream request path, unreachable in this build (kept so the diff stays surgical).
+export async function upstreamPlatformRequestUnused(url: string, init: RequestInit, signal: AbortSignal): Promise<unknown> {
   const path = new URL(url).pathname
   let response: Response
   try {
