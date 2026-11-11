@@ -128,7 +128,7 @@ async function main(): Promise<void> {
       const prepared = prepareRuntimePatches(BUILD_ROOT, resolve(APP_ROOT, '..', '..'))
       if (OFFLINE_CROSS) {
         const workspace = join(BUILD_ROOT, 'pnpm-workspace.yaml')
-        writeFileSync(workspace, `${readFileSync(workspace, 'utf8').trimEnd()}\nsupportedArchitectures:\n  os: [win32]\n  cpu: [x64]\n`)
+        writeFileSync(workspace, `${readFileSync(workspace, 'utf8').trimEnd()}\nsupportedArchitectures:\n  os: [win32, current]\n  cpu: [x64]\n`)
       }
       return prepared
     })
