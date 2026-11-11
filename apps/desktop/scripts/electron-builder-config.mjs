@@ -127,6 +127,8 @@ export function createElectronBuilderConfig(
     electronFuses: { runAsNode: true },
     beforeBuild: async () => {
       if (resolvedPlatform !== 'win32') return true
+      // OFFLINE BUILD: the cross build skips the PowerShell/VS installer-UI helper (directory build, no NSIS).
+      if (env.DSH_OFFLINE_CROSS_WIN === '1') return true
       await promisify(execFile)('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
         fileURLToPath(new URL('./prepare-windows-installer.ps1', import.meta.url)),
         '-OutputDirectory', join(buildPaths.root, 'installer-ui')], {
@@ -243,6 +245,8 @@ export function createElectronBuilderConfig(
     win: {
       icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
       forceCodeSigning: !unsigned,
+      // OFFLINE BUILD: rcedit needs Wine on Linux; the cross build keeps Electron's stock exe resources.
+      ...(env.DSH_OFFLINE_CROSS_WIN === '1' ? { signAndEditExecutable: false } : {}),
       signtoolOptions: {
         sign: windowsSigner,
         publisherName: windowsSigner === undefined ? undefined : resolveWindowsUpdatePublisher(env.DSH_DESKTOP_WINDOWS_CER_FILE),

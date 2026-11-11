@@ -27,6 +27,13 @@ async function prepareElectron({ platform, arch }: DesktopTarget): Promise<strin
     () => downloadArtifact({ version, platform, arch, artifactName: 'electron', cacheRoot: BUILD_PATHS.downloads }))
   rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
+  // OFFLINE BUILD: a Linux cross build cannot execute electron.exe; Electron 44.7.0 embeds Node 24.21.0.
+  if (process.platform !== platform) {
+    const known: Record<string, string> = { '44.7.0': '24.21.0' }
+    const node = process.env.DSH_OFFLINE_ELECTRON_NODE_VERSION ?? known[version]
+    if (node === undefined) throw new Error(`desktop runtime: set DSH_OFFLINE_ELECTRON_NODE_VERSION for Electron ${version}`)
+    return node
+  }
   const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
   return execFileSync(executable, ['-p', 'process.versions.node'], {
     encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },

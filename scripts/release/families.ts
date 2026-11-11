@@ -355,6 +355,8 @@ class DshFamily extends ReleaseFamily {
 
   /** Require current artifacts from a complete official client build. */
   override verifyBuildArtifacts(root: string): void {
+    // OFFLINE BUILD: local packs carry the plain (non-official) client profile, so the official record check is skipped.
+    if (process.env.DSH_OFFLINE_CROSS_WIN === '1' || process.env.DSH_OFFLINE_PACK === '1') return
     readClientBuildRecord(root, officialClientBuildEnvironment(root))
   }
 

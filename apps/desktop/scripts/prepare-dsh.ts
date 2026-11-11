@@ -43,7 +43,9 @@ const STORE_ROOT = join(BUILD_ROOT, 'store')
 const RUNTIME_ROOT = BUILD_PATHS.runtime
 const PNPM_BUILD_STATE = BUILD_PATHS.dshPnpm
 const PACKAGE_SET_ROOT = BUILD_PATHS.packageSet
-const NODE = join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+// OFFLINE BUILD: DSH_OFFLINE_CROSS_WIN=1 materializes the win32-x64 runtime on Linux with the host Node.
+const OFFLINE_CROSS = process.env.DSH_OFFLINE_CROSS_WIN === '1'
+const NODE = OFFLINE_CROSS ? process.execPath : join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
 const PNPM = join(RUNTIME_ROOT, 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.mjs')
 
 function manifestVersion(path: string, subject: string): string {
@@ -123,7 +125,12 @@ async function main(): Promise<void> {
       copyFileSync(join(PACKAGE_SET_ROOT, DESKTOP_PACKAGE_SET_FILE), join(BUILD_ROOT, DESKTOP_PACKAGE_SET_FILE))
       cpSync(join(PACKAGE_SET_ROOT, DESKTOP_PACKAGES_DIR), join(BUILD_ROOT, DESKTOP_PACKAGES_DIR), { recursive: true })
       createRuntimeProjectMetadata(BUILD_ROOT, release)
-      return prepareRuntimePatches(BUILD_ROOT, resolve(APP_ROOT, '..', '..'))
+      const prepared = prepareRuntimePatches(BUILD_ROOT, resolve(APP_ROOT, '..', '..'))
+      if (OFFLINE_CROSS) {
+        const workspace = join(BUILD_ROOT, 'pnpm-workspace.yaml')
+        writeFileSync(workspace, `${readFileSync(workspace, 'utf8').trimEnd()}\nsupportedArchitectures:\n  os: [win32]\n  cpu: [x64]\n`)
+      }
+      return prepared
     })
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:lockfile', () => runPnpm(['install', '--lockfile-only']))
     verifyRuntimePatches(BUILD_ROOT, patches)
@@ -134,7 +141,7 @@ async function main(): Promise<void> {
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:install', () => runPnpm(['install', '--prod', '--frozen-lockfile', '--trust-lockfile']))
     const packageSet = readDesktopCorePackageSet(BUILD_ROOT, release.version)
     const targetName = resolveDesktopBuildTarget()
-    const target = { platform: process.platform, arch: desktopTargetPlatform(targetName).arch }
+    const target = { platform: OFFLINE_CROSS ? 'win32' as NodeJS.Platform : process.platform, arch: desktopTargetPlatform(targetName).arch }
     const modules = join(BUILD_ROOT, 'node_modules')
     const officeManifest = JSON.parse(readFileSync(join(modules, '@deepseek-ai/libreoffice-kit/package.json'), 'utf8'))
     const officeEngine = selectOfficeEngine(officeManifest, target)
