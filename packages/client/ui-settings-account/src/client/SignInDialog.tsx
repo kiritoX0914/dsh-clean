@@ -7,6 +7,9 @@ import type { AccountKey } from './locales.ts'
 import { authorizeUrlWithTheme } from './authorize-url.ts'
 import css from './SignInDialog.module.css'
 
+/** OFFLINE BUILD switch. */
+const OFFLINE_BUILD = true as boolean
+
 /** @param props - safe account state, localized copy, and user actions. @returns login dialog. */
 export function SignInDialog({ account, colorScheme, start, cancel, close, useApiKey, t }: {
   account: AccountSnapshot
@@ -80,10 +83,11 @@ export function SignInDialog({ account, colorScheme, start, cancel, close, useAp
     <div className={css.actions}>
       <Button variant="outline" className={css.secondaryButton} disabled={committing || busy}
         onClick={active ? dismiss : useApiKey}>{t(active ? 'cancel' : 'addApiKey')}</Button>
-      <Button variant="primary" className={css.primaryButton} disabled={busy || committing || waiting || account.view === undefined}
+      {/* OFFLINE BUILD: official account sign-in button removed. */}
+      {!OFFLINE_BUILD && <Button variant="primary" className={css.primaryButton} disabled={busy || committing || waiting || account.view === undefined}
         aria-label={waiting ? t('waiting') : undefined} onClick={() => { void run(retry) }}>
         {waiting ? <IconLoadingOutlineRegular className={css.spinner} /> : t(expired || error ? 'retry' : 'signIn')}
-      </Button>
+      </Button>}
     </div>
   </Modal>
 }

@@ -13,6 +13,9 @@ import { authorizeUrlWithTheme } from './authorize-url.ts'
 import type { BonusNotice } from './bonus-notices.ts'
 import css from './AccountSection.module.css'
 
+/** OFFLINE BUILD switch. */
+const OFFLINE_BUILD = true as boolean
+
 /** Safe account snapshot shared by the settings page and launcher. */
 export interface AccountSnapshot {
   /** Server-authored notices in front-to-back order, absent when none are available. */
@@ -146,6 +149,8 @@ export function AccountSection({ t, useAccount, useTheme, start, cancel, openPla
     : attempt?.phase === 'expired' ? t('expired')
       : active ? t(attempt.phase === 'initializing' ? 'initializing' : attempt.phase === 'waiting-browser' ? 'waiting' : 'completing')
         : signedIn ? profile?.contact ?? t(details?.profile === undefined ? 'loading' : 'profileUnavailable') : t('signInDescription')
+  // OFFLINE BUILD: no official account section when signed out (sign-in is removed).
+  if (!signedIn && !active && OFFLINE_BUILD) return null
   if (!signedIn && !active) return (
     <section className={css.signedOut} aria-label={t('nav')}>
       <div className={css.signedOutContent}>
