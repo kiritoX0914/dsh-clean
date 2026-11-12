@@ -34,7 +34,7 @@
     "acorn": "^8.18.0",
     "buffer": "^6.0.3",
     "picomatch": "^4.0.7",
-    "readable-stream": "^4.7.0",
+    "readable-stream": "^4.8.0",
     "@deepseek-ai/dsh-client-web": "workspace:*"
   },
   "peerDependencies": {
@@ -63,7 +63,7 @@
     "@deepseek-ai/dsh-subprocess-local": "workspace:*",
     "@deepseek-ai/node-addon-system": "workspace:~",
     "@types/picomatch": "^4.0.3",
-    "@types/readable-stream": "^4.0.24",
+    "@types/readable-stream": "^4.0.25",
     "chokidar": "5.0.0"
   },
   "files": [
